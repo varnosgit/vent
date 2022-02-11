@@ -2,6 +2,7 @@
 
 struct_message myData;
 uint8_t registerStatus = 0;
+bool newData_flag = 0;
 uint8_t myMAC_Address[] = {0xFF, 0xFF, 0xFF , 0xFF , 0xFF ,0xFF};
 uint8_t Brodcast_Address[] = {0xFF, 0xFF, 0xFF , 0xFF , 0xFF ,0xFF}; // {0x94, 0xB9, 0x7E , 0xD9 , 0xA1 ,0x04}; 
 uint8_t Controller_Address[] = {0x08, 0x3A, 0xF2 , 0x45 , 0xA5 ,0xC8};
@@ -33,22 +34,8 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
 
 void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
   memcpy(&myData, incomingData, sizeof(myData));
-  if (myData._command == 0x01) //register command
-  {
-    registerStatus = 1;
-    EEPROM.write(0, registerStatus);
-    for(int i=0; i<6; i++) 
-    {
-      Controller_Address[i] = mac[i];
-      EEPROM.write(i+1, mac[i]);
-    }
-    pairNew_device(Controller_Address);
-    EEPROM.commit();
-
-  }
-  Serial.printf("Message from %02X:%02X:%02X:%02X:%02X:%02X\n", mac[0], mac[1], mac[2], mac[3],
-                mac[4], mac[5]);
-
+  newData_flag = true;
+  Serial.printf("Message from %02X:%02X:%02X:%02X:%02X:%02X\n", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 }
 
 void sendDataTo(const uint8_t *mac_addr, uint8_t command, uint8_t *theData)

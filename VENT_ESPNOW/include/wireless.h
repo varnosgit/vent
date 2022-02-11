@@ -9,10 +9,12 @@ typedef struct struct_message {
   uint8_t reciever_MAC_addr[6];
   uint8_t _sender;   //0 unknown, 1 controller, 2 termostat, 3 vent
   uint8_t _command;  //0 unknown, 1 register
-  char a[32];
-  int b;
-  float c;
-  bool d;
+  uint8_t mode;
+  uint8_t batStat;
+  bool fanStatus;
+  int setPoint_temp;
+  bool ventStatus;
+  int reserved;
 } struct_message;
 
 
