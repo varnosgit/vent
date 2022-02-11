@@ -20,6 +20,7 @@
 
 extern struct_message myData;
 extern uint8_t registerStatus;
+extern bool newData_flag;
 extern uint8_t myMAC_Address[], Brodcast_Address[], Controller_Address[], TERMO_Address[];
 
 RTC_DATA_ATTR int bootCount = 0;
@@ -83,12 +84,39 @@ void setup()
 ////////////////////////////////////////////////////////////////////////////////////
 void loop()
 {
- if (registerStatus == 0)  // this vent is not registerd before
- {
-   sendDataTo(Brodcast_Address, 0x01, Brodcast_Address);
-   delay(2000);
- }
-  
+  if (registerStatus == 0)  // this vent is not registerd before
+  {
+    sendDataTo(Brodcast_Address, 0x01, Brodcast_Address);
+    delay(2000);
+  }
+  if (newData_flag)
+  {
+    newData_flag = false;
+    if (myData._sender == 0x01) // data recieved from controller
+    {
+      switch (myData._command)
+      {
+      case 0x01: // registeration command
+        registerStatus = 1;
+        EEPROM.write(0, registerStatus);
+        for(int i=0; i<6; i++) 
+        {
+          Controller_Address[i] = myData.sender_MAC_addr[i];
+          EEPROM.write(i+1, myData.sender_MAC_addr[i]);
+        }
+        pairNew_device(Controller_Address);
+        EEPROM.commit();
+        break;
+
+      case 0x02: // vent door open/close command
+        //vent_door(myData.ventStatus);
+          break;
+
+      default:
+        break;
+      }
+    }
+  }
 
 delay(500);
  // esp_deep_sleep_start();
