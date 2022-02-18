@@ -8,7 +8,7 @@ typedef struct struct_message {
   uint8_t sender_MAC_addr[6];
   uint8_t reciever_MAC_addr[6];
   uint8_t _sender;   //0 unknown, 1 controller, 2 termostat, 3 vent
-  uint8_t _command;  //0 unknown, 1 register
+  uint8_t _command;  //0 unknown, 1 register, 2 execute, 3 readState
   uint8_t mode;
   uint8_t batStat;
   bool fanStatus;

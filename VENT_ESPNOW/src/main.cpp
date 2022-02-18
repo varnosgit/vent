@@ -48,8 +48,9 @@ void setup()
 {
   EEPROM.begin(512);
   registerStatus = EEPROM.read(0);  // the 0 location determind if the vent is registered to the controller before 0 = no, 1 = yes
-  //EEPROM.write(0, registerStatus);
-  //EEPROM.commit();
+  registerStatus = 0;
+  EEPROM.write(0, registerStatus);
+  EEPROM.commit();
 
   // ++bootCount;
   // Serial.println("Boot number: " + String(bootCount));
@@ -63,8 +64,8 @@ void setup()
   display_init();
   display_log_init();   display_log_print("Initialising...");
   delay(100); Serial.begin(115200);   display_log_print("Serial Debug connect!");
-  logtxt1.drawNumber(getCpuFrequencyMhz(), 71, 240, 2);
-  delay(300); display_log_print("CPU Freq.:     MHz");
+  //logtxt1.drawNumber(getCpuFrequencyMhz(), 71, 240, 2);
+  delay(300); display_log_print("CPU Freq.: " + String(getCpuFrequencyMhz()) + "MHz");
   xTaskCreatePinnedToCore(
                     coreZEROTasks_code,      /* Task function. */
                     "Task1",        /* name of task. */
@@ -96,24 +97,28 @@ void loop()
     {
       switch (myData._command)
       {
-      case 0x01: // registeration command
-        registerStatus = 1;
-        EEPROM.write(0, registerStatus);
-        for(int i=0; i<6; i++) 
-        {
-          Controller_Address[i] = myData.sender_MAC_addr[i];
-          EEPROM.write(i+1, myData.sender_MAC_addr[i]);
-        }
-        pairNew_device(Controller_Address);
-        EEPROM.commit();
-        break;
-
-      case 0x02: // vent door open/close command
-        //vent_door(myData.ventStatus);
+        case 0x01: // registeration command
+          registerStatus = 1;
+          EEPROM.write(0, registerStatus);
+          for(int i=0; i<6; i++) 
+          {
+            Controller_Address[i] = myData.sender_MAC_addr[i];
+            EEPROM.write(i+1, myData.sender_MAC_addr[i]);
+          }
+          pairNew_device(Controller_Address);
+          EEPROM.commit();
+          display_log_print("Controller saved :)");
           break;
+          
+        case 0x02: 
+          if (myData.ventStatus== 0)
+              display_log_print("closing vent"); // vent door open/close command
+          else display_log_print("opening vent");
+          //vent_door(myData.ventStatus);
+            break;
 
-      default:
-        break;
+        default:
+          break;
       }
     }
   }
