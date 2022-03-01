@@ -10,7 +10,8 @@
 #include <TFT_eSPI.h> // Graphics and font library for ST7735 driver chip
 #include <display.h>
 
-#include "wireless.h"
+#include "wireless_prot.h"
+#include "lcd_segment.h"
 #include "timerSetups.h"
 #include "algos.h"
 
@@ -40,17 +41,22 @@ int dataCounter = 0;
 ////////////////////////////////////////////////////////////////////////////////////
 void coreZEROTasks_code( void * pvParameters ){
   for(;;){
-    delay(4);
+    delay(50);
   } 
 }
 ////////////////////////////////////////////////////////////////////////////////////
 void setup()
 {
+  Serial.begin(115200); 
+
   EEPROM.begin(512);
   registerStatus = EEPROM.read(0);  // the 0 location determind if the vent is registered to the controller before 0 = no, 1 = yes
   registerStatus = 0;
   EEPROM.write(0, registerStatus);
   EEPROM.commit();
+
+  LCD_Initialize();
+  LCD_test_run();
 
   // ++bootCount;
   // Serial.println("Boot number: " + String(bootCount));
@@ -60,36 +66,38 @@ void setup()
   // esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);
   // Serial.println("Setup ESP32 to sleep for every " + String(TIME_TO_SLEEP) + " Seconds");
 
-
-  display_init();
-  display_log_init();   display_log_print("Initialising...");
-  delay(100); Serial.begin(115200);   display_log_print("Serial Debug connect!");
-  //logtxt1.drawNumber(getCpuFrequencyMhz(), 71, 240, 2);
-  delay(300); display_log_print("CPU Freq.: " + String(getCpuFrequencyMhz()) + "MHz");
-  xTaskCreatePinnedToCore(
-                    coreZEROTasks_code,      /* Task function. */
-                    "Task1",        /* name of task. */
-                    10000,          /* Stack size of task */
-                    NULL,           /* parameter of the task */
-                    1,              /* priority of the task */
-                    &CoreZEROTasks, /* Task handle to keep track of created task */
-                    0);             /* pin task to core 0 */                  
-  delay(500); 
-  delay(200); display_log_print("2nd Core setup!");
-  delay(100); timer_init(); display_log_print("Timers connected!");
+//////////////////////////////////////////////////////////////////////////////
+  // display_init();
+  // display_log_init();   display_log_print("Initialising...");
+  // delay(100);   display_log_print("Serial Debug connect!");
+  // delay(300); display_log_print("CPU Freq.: " + String(getCpuFrequencyMhz()) + "MHz");
+  // xTaskCreatePinnedToCore(
+  //                   coreZEROTasks_code,      /* Task function. */
+  //                   "Task1",        /* name of task. */
+  //                   10000,          /* Stack size of task */
+  //                   NULL,           /* parameter of the task */
+  //                   1,              /* priority of the task */
+  //                   &CoreZEROTasks, /* Task handle to keep track of created task */
+  //                   0);             /* pin task to core 0 */                  
+  // delay(500); 
+  // delay(200); display_log_print("2nd Core setup!");
+  // delay(100); timer_init(); display_log_print("Timers connected!");
 
   wireless_init();
 
 
 }
 ////////////////////////////////////////////////////////////////////////////////////
+uint8_t myrec[10];
+int tempo = 0;
 void loop()
 {
-  if (registerStatus == 0)  // this vent is not registerd before
-  {
-    sendDataTo(Brodcast_Address, 0x01, Brodcast_Address);
-    delay(2000);
-  }
+  // if (registerStatus == 0)  // this vent is not registerd before
+  // {
+  //   sendDataTo_control(Brodcast_Address, 0x01, Brodcast_Address);
+  //   delay(2000);
+  // }
+  ////////////////////////////////////////////
   if (newData_flag)
   {
     newData_flag = false;
@@ -117,12 +125,30 @@ void loop()
           //vent_door(myData.ventStatus);
             break;
 
+        case 0x07: 
+          if (myData.setPoint_temp == 1)display_log_print("Auto");
+          if (myData.setPoint_temp == 2)display_log_print("On");
+          if (myData.setPoint_temp == 3)display_log_print("off");
+          if (myData.setPoint_temp == 4)display_log_print("heat");
+          if (myData.setPoint_temp == 5)display_log_print("cool");
+          break;
+
         default:
           break;
       }
     }
   }
 
-delay(500);
+delay(10);
  // esp_deep_sleep_start();
+
+   if (Serial.available() > 0) {
+    Serial.readBytesUntil('\n', myrec, 10);
+    tempo = (myrec[0] - '0')*10 + (myrec[1] - '0');
+    LCD_Digit(tempo,'S');
+
+    myData._sender = 0x02;
+    myData.setPoint_temp = tempo;
+    sendDataTo_control(Brodcast_Address, 0x05, Brodcast_Address);
+   }
 }

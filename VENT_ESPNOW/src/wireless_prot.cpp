@@ -1,4 +1,4 @@
-#include "wireless.h"
+#include "wireless_prot.h"
 
 uint8_t registerStatus = 0;
 bool newData_flag = 0;
@@ -56,15 +56,18 @@ void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
   //display_log_print("new data recieved");
 }
 
-void sendDataTo(uint8_t *mac_addr, uint8_t command, uint8_t *theData)
+void sendDataTo_control(const uint8_t *mac_addr, uint8_t command, uint8_t *theData)
 {   
     uint8_t temp_send_mac[6];
     memcpy(temp_send_mac, mac_addr, 6);
     memcpy(myData.sender_MAC_addr, myMAC_Address, 6);
 
     myData._sender = 0x01; //0 unknown, 1 controller, 2 termostat, 3 vent
-    myData._command = command; // register it to controller
-
+    /* commands:
+    0x01: register
+    0x05: setpointchange 
+    */
+    myData._command = command; 
     if (esp_now_send(temp_send_mac, (uint8_t *) &myData, sizeof(myData)) == ESP_OK)
     {  
       Serial.println("Sent with success");

@@ -23,4 +23,4 @@ void wireless_init(void);
 bool pairNew_device(uint8_t pair_addr[]);
 void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len);
 void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status);
-void sendDataTo(const uint8_t *mac_addr, uint8_t command, uint8_t *theData);
+void sendDataTo_control(const uint8_t *mac_addr, uint8_t command, uint8_t *theData);
