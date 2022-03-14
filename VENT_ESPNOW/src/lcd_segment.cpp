@@ -12,16 +12,16 @@ void HT1621_SendBits(uint8_t sdata,uint8_t cnt) //Send cnt MSB bits of sdata.
   uint8_t i; 
   for(i=0;i<cnt;i++) 
     { 
-      digitalWrite(26, LOW);
+      digitalWrite(27, LOW);
       if(sdata&0x80)
         {
-          digitalWrite(14, HIGH);
+          digitalWrite(32, HIGH);
         }
       else
         {
-          digitalWrite(14, LOW);
+          digitalWrite(32, LOW);
         }
-      digitalWrite(26, HIGH);
+      digitalWrite(27, HIGH);
       sdata<<=1; 
     } 
 }
@@ -29,12 +29,12 @@ void HT1621_SendBits(uint8_t sdata,uint8_t cnt) //Send cnt MSB bits of sdata.
 
 void HT1621_SendCmd(uint8_t command) //Write to the command registers.
 { 
-  digitalWrite(32, LOW);                     //Select,
+  digitalWrite(26, LOW);                     //Select,
   HT1621_SendBits(0x80,4); //Next byte is a command, (implemented as 1000+8
                            // bits, rather than the 100+9 bits specified
                            // in the datasheet.)
   HT1621_SendBits(command,8);//Write the 8 bit command value,
-  digitalWrite(32, HIGH);                     //Deselect
+  digitalWrite(26, HIGH);                     //Deselect
 }
 
 void HT1621_Write(uint8_t addr,uint8_t sdata) //Write sdata to address addr:
@@ -42,11 +42,11 @@ void HT1621_Write(uint8_t addr,uint8_t sdata) //Write sdata to address addr:
   Seg_LCD.register_data[addr]=sdata;
 
   addr<<=2; 
-  digitalWrite(32, LOW); 
+  digitalWrite(26, LOW); 
   HT1621_SendBits(0xA0,3);     //Write following to data memory
   HT1621_SendBits(addr,6);     // at address addr
   HT1621_SendBits(sdata,8);    // this is the data to be written.
-  digitalWrite(32, HIGH);
+  digitalWrite(26, HIGH);
 } 
 
 void HT1621_AllOff(uint8_t number) //Clear all segments.
@@ -74,18 +74,30 @@ void HT1621_AllOn(uint8_t number) //Set all segments.
 void HT1621_Init(void)//Initialize the HT1621 chip.
 {
   
-  pinMode(32, OUTPUT);
+  // pinMode(32, OUTPUT);
+  // pinMode(26, OUTPUT);
+  // pinMode(14, OUTPUT);
+  // pinMode(13, OUTPUT);
+
+  // digitalWrite(32, HIGH);
+  // delay(500); 
+  // digitalWrite(14, HIGH);
+  // delay(500);
+  // digitalWrite(26, HIGH);
+  // delay(500);
+
   pinMode(26, OUTPUT);
-  pinMode(14, OUTPUT);
+  pinMode(27, OUTPUT);
+  pinMode(32, OUTPUT);
   pinMode(13, OUTPUT);
 
 
   
-  digitalWrite(32, HIGH);
-  delay(500); 
-  digitalWrite(14, HIGH);
-  delay(500);
   digitalWrite(26, HIGH);
+  delay(500); 
+  digitalWrite(32, HIGH);
+  delay(500);
+  digitalWrite(27, HIGH);
   delay(500);
   
   HT1621_SendCmd(Sys_en);
@@ -134,11 +146,11 @@ void HT1621_Init(void)//Initialize the HT1621 chip.
 
 void LCD_PW_Ctrl(bool s)
 {
-  digitalWrite(32, HIGH);
-  delay(200); 
-  digitalWrite(14, HIGH);
-  delay(200);
   digitalWrite(26, HIGH);
+  delay(200); 
+  digitalWrite(32, HIGH);
+  delay(200);
+  digitalWrite(27, HIGH);
   delay(200); 
   
   if(s==1) 
@@ -480,7 +492,8 @@ void LCD_OFF(void)
 
 void LCD_Initialize(void)
 {
-  lcd.begin(32, 26, 14, 13); // (cs, wr, Data, backlight)
+  //lcd.begin(32, 26, 14, 13); // (cs, wr, Data, backlight)
+   lcd.begin(26, 27, 32, 13); // (cs, wr, Data, backlight)
   HT1621_Init();      // Initialize HT1621 Chip
   Serial.println(" HT1621_Init");
   HT1621_AllOn(13);   // Turn On All Segments for Test

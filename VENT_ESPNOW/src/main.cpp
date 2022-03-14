@@ -58,6 +58,8 @@ void setup()
   LCD_Initialize();
   LCD_test_run();
 
+
+
   // ++bootCount;
   // Serial.println("Boot number: " + String(bootCount));
   //logtxt1.drawNumber(getCpuFrequencyMhz(), 71, 240, 2);
@@ -116,6 +118,9 @@ void loop()
           pairNew_device(Controller_Address);
           EEPROM.commit();
           display_log_print("Controller saved :)");
+          Serial.printf("My Controller MAC address is: %02X:%02X:%02X:%02X:%02X:%02X\n",
+          Controller_Address[0], Controller_Address[1], Controller_Address[2], 
+          Controller_Address[3], Controller_Address[4], Controller_Address[5]);
           break;
           
         case 0x02: 
